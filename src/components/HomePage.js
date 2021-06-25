@@ -54,7 +54,7 @@ export const HomePage = () => {
           {MOCK_DATA.map(({ id, image, name, description, owner }) => {
             return (
               <div key={id} className="bg-white rounded p-2">
-                <img src={image} className="mx-auto p-4" />
+                <img src={image} className="mx-auto p-4" alt="Robots"  />
                 <div className="text-xl">{name}</div>
                 <div className="">{description}</div>
                 <hr className="my-4" />
