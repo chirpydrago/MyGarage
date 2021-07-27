@@ -11,6 +11,8 @@ import { DeleteOutlined } from "@material-ui/icons";
 import { IconButton } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { Divider } from "@material-ui/core";
+import { height } from "@material-ui/system";
+import { connectWallet, getCurrentWalletConnected } from './Interact'; 
 
 const useStyles = makeStyles(theme => ({
 
@@ -23,15 +25,15 @@ const useStyles = makeStyles(theme => ({
     component: "img"
   },
 
-  description: {
+  description: {    
     variant: "p",
-    color: "textSecondary",
-    component: "p",
-    Align: "justify"
+    color: "textSecondary",    
+    Align: "justify",
+    height: 50
   },
 
   card: {
-    backgroundColor: '#808080'
+    backgroundColor: '#FFFFFF'
   },
 
   container: {
@@ -39,13 +41,14 @@ const useStyles = makeStyles(theme => ({
   },
 
   owner: {
-    
-    textalign:'left',
-
+    paddingTop: 10,
+    component:'h5',
+    textAlign:'left'
   },
 
   wallet: {
-    padding:5,
+    component:'p',
+    textAlign:'left',
 
   }
 
@@ -59,7 +62,54 @@ const formatIpfsUrl = (url) => {
   return url.replace(/ipfs:\/\//g, "https://cloudflare-ipfs.com/");
 };
 
+const formatEthAddr = (wallet) => {return wallet.substring(0, 7) + '...' + wallet.substring(wallet.length - 5) }
+
+
+
 const Marketplace = () => {
+
+  const [walletAddress, setWallet] = useState('');
+  const [balance, setBalance] = useState('');
+
+  const connectWalletPressed = async () => {
+    const walletResponse = await connectWallet();
+    setWallet(walletResponse.address);
+    setBalance(walletResponse.balance);
+  };
+
+  connectWalletPressed();
+
+  function addWalletListener() {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          setWallet(accounts[0]);
+          // setStatus("👆🏽 Write a message in the text-field above.");
+        } else {
+          setWallet("");
+          // setStatus("🦊 Connect to Metamask using the top right button.");
+        }
+      });
+    } else {
+      // setStatus(
+      //   <p>
+      //     {" "}
+      //     🦊{" "}
+      //     <a target="_blank" href={`https://metamask.io/download.html`}>
+      //       You must install Metamask, a virtual Ethereum wallet, in your
+      //       browser.
+      //     </a>
+      //   </p>
+      // );
+    }
+  }
+
+  useEffect(async () => {
+    const { address, balance } = await getCurrentWalletConnected();
+    setWallet(address);
+    setBalance(balance);
+    addWalletListener();
+  }, []);
 
   const styles = useStyles();
 
@@ -93,6 +143,7 @@ const Marketplace = () => {
           const formattedImage = formatIpfsUrl(metadata.image);
           const price = Math.floor(Math.random() * (500 - 100) + 100) / 100;
           return {
+            addr,
             id,
             name: metadata.name,
             image: formattedImage,
@@ -102,7 +153,7 @@ const Marketplace = () => {
           };
         });
         const data = await Promise.all(deferredData);
-        console.log(data);
+        //console.log(data);
         mdata.push(data);
       }
     }
@@ -161,9 +212,9 @@ const Marketplace = () => {
             <Grid container spacing={3} marginTop='10px'>
               {mintedNftState.mdata.map((items, index) => {
                 return items.map(
-                  ({ id, image, name, description, owner, price }) => {
+                  ({ addr, id, image, name, description, owner, price }) => {
                     return (
-                      <Grid item key={id} xs={12} md={3} sm={6} zeroMinWidth>
+                      <Grid item key={id} xs={12} md={3} sm={6} marginTop={'20'}>
                         {/* <NftCard card={items}/> */}
                         <Card className={styles.card}>
                           <CardHeader title={name} />
@@ -174,22 +225,29 @@ const Marketplace = () => {
                             // title={name}
                             />
                             <CardContent>
-                              <Typography noWrap
+                              <Typography
                                 className={styles.description} >
                                 {description}
                               </Typography>
                               <Divider variant='hard' />
                               <div></div>
                               <div></div>
-                              <div className={styles.owner}>Owned By:</div>
+                              <div className={styles.owner}>                                
+                                NFT Contract Address:                                
+                              </div>
+                              <div className={styles.wallet}>{formatEthAddr(addr)} </div>
+                              <div className={styles.owner}>                                
+                                Owned By:                                
+                              </div>
                               <div className={styles.wallet}>{owner.substring(0, 7) + '...' + owner.substring(owner.length - 5)} </div>
                               <div className="text-left text-xs">Price : {price} ETH</div>
                             </CardContent>
                           </CardActionArea>
                           <CardActions>
-                            <Button variant="contained" size="large" color="primary" fullWidth>
-                              BUY
-                            </Button>
+                            {walletAddress===owner && (<Button variant="contained" size="large" color="primary" fullWidth>TRANSFER</Button>)}
+                            {walletAddress!==owner && (<Button variant="contained" size="large" color="primary" fullWidth>BUY TOKEN</Button>)}
+
+                            
                           </CardActions>
 
                         </Card>

@@ -1,18 +1,54 @@
 import React, { useState, useEffect } from "react";
 import { connectWallet, getCurrentWalletConnected } from './Interact';
-import { Grid, Paper } from "@material-ui/core";
+import { Button, Container, Grid, Paper } from "@material-ui/core";
+import { makeStyles } from "@material-ui/core/styles";
+import { Typography } from "@material-ui/core";
+import '@fontsource/roboto';
+
+
+const useStyles = makeStyles(theme => ({
+
+  address: {
+    fontSize: '20px',
+    // //variant:"H4",
+    color: "textSecondary",
+    textAlign: "left",
+    marginTop: '30px',
+    height: 50,
+    paddingLeft: 30,
+    // fontFamily: 'Roboto'
+  },
+
+  owner: {
+    paddingLeft: 30,
+    fontSize:'15px',
+    textAlign: 'left'
+  },  
+
+  container: {
+    marginTop: '10'
+  },
+
+ 
+
+}));
+
 
 
 // const provider = getDefaultProvider("rinkeby", { alchemy: config.alchemyKey });
 
 const Profile = () => {
 
+  const styles = useStyles();
+
   //const ethereum = window.ethereum
   const [walletAddress, setWallet] = useState('');
+  const [balance, setBalance] = useState('');
 
   const connectWalletPressed = async () => {
     const walletResponse = await connectWallet();
     setWallet(walletResponse.address);
+    setBalance(walletResponse.balance);
   };
 
   connectWalletPressed();
@@ -43,36 +79,52 @@ const Profile = () => {
   }
 
   useEffect(async () => {
-    const { address } = await getCurrentWalletConnected();
+    const { address, balance } = await getCurrentWalletConnected();
     setWallet(address);
+    setBalance(balance);
     addWalletListener();
   }, []);
+
+  
 
 
 
   return (
     <>
-    <div>
-      <Grid container>
-        <Grid item xs={12} md={3} sm={6}>
-          <Paper>
-            
-          </Paper>
+      <Container style={{ height: '75vh' }}>
+        <Grid container spacing={2} marginTop='10px'>
+          <Grid item lg={6}>
+            <Paper>
+              <Typography className={styles.address}>
+                Address:
+              </Typography>
+              <Typography className={styles.owner}>
+                {walletAddress}
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item lg={6}>
+            <Paper>
+              <Typography className={styles.address}>
+                Balance:
+              </Typography>
+              <Typography className={styles.owner}>
+                {balance} ETH
+              </Typography>
+            </Paper>
+          </Grid>
+          <Grid item lg={12}>
+            {/* <Button variant="contained" onClick={handlePurchase}>
+              BUY MY TOKEN
+            </Button>             */}
+          </Grid>
+          {/* <Grid item xs={12} md={3} sm={6}>
+            <Paper>4</Paper>
+          </Grid> */}
         </Grid>
-        <Grid item xs={12} md={3} sm={6}>
-          <Paper>2</Paper>
-        </Grid>
-        <Grid item xs={12} md={3} sm={6}>
-          <Paper>3</Paper>
-        </Grid>
-        <Grid item xs={12} md={3} sm={6}>
-          <Paper>4</Paper>
-        </Grid>
-      </Grid>
-    </div>
+      </Container>
 
-      <div>This is the Profile tab. Wallet : {5 + 2} </div>
-      <div>This is another : {walletAddress}</div>
+
     </>
   )
 }

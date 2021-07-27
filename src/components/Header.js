@@ -53,7 +53,9 @@ export default function Header() {
                             startAdornment={<SearchIcon fontSize="small" />}
                         />
                     </Grid>                    
-                    <Grid item sm></Grid>
+                    <Grid item sm>
+                        {/* <Button variant="contained" onclicked={handlePurchase}>BUY MY TOKEN</Button> */}
+                    </Grid>
                 </Grid>
             </Toolbar>
         </AppBar>
