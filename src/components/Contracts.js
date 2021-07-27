@@ -1,0 +1,8 @@
+const nft  = [
+    "0x637d0e09a3aa1031ff6A9AbAE2a70Ab865974d2b",
+    "0xE355ed57069bf69Ade5Bd85fEb22349306985Cf7",
+    "0xc154187060597590a386F0d4B5680FA795731E7C"
+    
+]
+  
+export default nft;
