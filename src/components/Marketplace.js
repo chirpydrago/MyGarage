@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Contract, getDefaultProvider, providers, utils } from "ethers";
+import { Contract, getDefaultProvider, providers, utils , ethers} from "ethers";
 import { config } from "../config";
 import abi from "../fixtures/abi.json";
 import axios from "axios";
@@ -12,7 +12,8 @@ import { IconButton } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { Divider } from "@material-ui/core";
 import { height } from "@material-ui/system";
-import { connectWallet, getCurrentWalletConnected } from './Interact'; 
+import { connectWallet, getCurrentWalletConnected } from './Interact';
+import { id } from "ethers/lib/utils";
 
 const useStyles = makeStyles(theme => ({
 
@@ -25,9 +26,9 @@ const useStyles = makeStyles(theme => ({
     component: "img"
   },
 
-  description: {    
+  description: {
     variant: "p",
-    color: "textSecondary",    
+    color: "textSecondary",
     Align: "justify",
     height: 50
   },
@@ -42,13 +43,13 @@ const useStyles = makeStyles(theme => ({
 
   owner: {
     paddingTop: 10,
-    component:'h5',
-    textAlign:'left'
+    component: 'h5',
+    textAlign: 'left'
   },
 
   wallet: {
-    component:'p',
-    textAlign:'left',
+    component: 'p',
+    textAlign: 'left',
 
   }
 
@@ -62,7 +63,7 @@ const formatIpfsUrl = (url) => {
   return url.replace(/ipfs:\/\//g, "https://cloudflare-ipfs.com/");
 };
 
-const formatEthAddr = (wallet) => {return wallet.substring(0, 7) + '...' + wallet.substring(wallet.length - 5) }
+const formatEthAddr = (wallet) => { return wallet.substring(0, 7) + '...' + wallet.substring(wallet.length - 5) }
 
 
 
@@ -120,10 +121,16 @@ const Marketplace = () => {
   const [purchaseState, setPurchaseState] = useState({
     state: "UNINITIALIZED",
   });
+
+  const [transferState, setTransferState] = useState({ state: "UNINITIALIZED", });
+
   const modalVisible =
     purchaseState.state === "PENDING_METAMASK" ||
     purchaseState.state === "PENDING_SIGNER" ||
-    purchaseState.state === "PENDING_CONFIRMAION";
+    purchaseState.state === "PENDING_CONFIRMAION" ||
+    transferState.state === "PENDING_METAMASK" ||
+    transferState.state === "PENDING_SIGNER" ||
+    transferState.state === "PENDING_CONFIRMAION";
 
   const loadRobotsData = async () => {
     var mdata = [];
@@ -196,6 +203,44 @@ const Marketplace = () => {
     await loadRobotsData();
   };
 
+  const handleTransfer = async (addr,id,e) => {
+    const { ethereum } = window;
+    if (typeof ethereum == "undefined") alert("Metamask is not detected");
+
+    // Prompts Metamask to connect
+    await ethereum.enable();
+
+    // Create new provider from Metamask
+    const provider = new providers.Web3Provider(window.ethereum);
+
+    // Get the signer from Metamask
+    const signer = provider.getSigner();
+
+    const contract = new Contract(
+      addr,
+      abi,
+      signer
+    );
+
+    // 0x88e4C7FEf63bB408465BE0409D141bF4dE89c127
+
+    // 0x24e9cae8eB8Af41bA18159717A30e560781B3480
+
+
+
+    // Call the transfer method
+    const destAddr = prompt('Please enter destination address correctly:');
+    console.log(walletAddress.toString ,destAddr, addr , id);
+    setTransferState({ state: "PENDING_SIGNER" });    
+    const receipt = await contract.transferFrom({ from: walletAddress , to: destAddr , tokenId: id });
+    setTransferState({ state: "PENDING_CONFIRMAION" });
+    const transaction = await receipt.wait();
+    setTransferState({ state: "SUCCESS", transaction });
+
+    // Reload the Robots
+    await loadRobotsData();
+  };
+
 
 
   return (
@@ -232,22 +277,29 @@ const Marketplace = () => {
                               <Divider variant='hard' />
                               <div></div>
                               <div></div>
-                              <div className={styles.owner}>                                
-                                NFT Contract Address:                                
+                              <div className={styles.owner}>
+                                NFT Contract Address:
                               </div>
-                              <div className={styles.wallet}>{formatEthAddr(addr)} </div>
-                              <div className={styles.owner}>                                
-                                Owned By:                                
+                              <div className={styles.wallet}>{formatEthAddr(addr)} / {id} </div>
+                              <div className={styles.owner}>
+                                Owned By:
                               </div>
                               <div className={styles.wallet}>{owner.substring(0, 7) + '...' + owner.substring(owner.length - 5)} </div>
                               <div className="text-left text-xs">Price : {price} ETH</div>
                             </CardContent>
                           </CardActionArea>
                           <CardActions>
-                            {walletAddress===owner && (<Button variant="contained" size="large" color="primary" fullWidth>TRANSFER</Button>)}
-                            {walletAddress!==owner && (<Button variant="contained" size="large" color="primary" fullWidth>BUY TOKEN</Button>)}
+                            {walletAddress === owner && (
+                              <Button
+                              variant="contained"
+                              size="large" 
+                              color="primary" 
+                              fullWidth
+                              onClick={(e)=>handleTransfer(addr,id,e)}
+                              >TRANSFER</Button>)}
+                            {walletAddress !== owner && (<Button variant="contained" size="large" color="primary" fullWidth>BUY TOKEN</Button>)}
 
-                            
+
                           </CardActions>
 
                         </Card>
@@ -317,6 +369,12 @@ const Marketplace = () => {
                       "Waiting for Signed Transaction"}
                     {purchaseState.state === "PENDING_CONFIRMAION" &&
                       "Waiting for Block Confirmation"}
+                    {transferState.state === "PENDING_METAMASK" &&
+                      "Connecting Metamask..."}
+                    {transferState.state === "PENDING_SIGNER" &&
+                      "Waiting for Signed Transaction"}
+                    {transferState.state === "PENDING_CONFIRMAION" &&
+                      "Waiting for Block Confirmation"}
                   </h3>
                   <div className="mt-2">
                     <p className="text-sm text-gray-500">
@@ -325,6 +383,12 @@ const Marketplace = () => {
                       {purchaseState.state === "PENDING_SIGNER" &&
                         "Approve the purchase transaction within the Metamask extension"}
                       {purchaseState.state === "PENDING_CONFIRMAION" &&
+                        "Transaction has been sent to the blockchain. Please wait while the transaction is being confirmed."}
+                      {transferState.state === "PENDING_METAMASK" &&
+                        "Allow Metamask to connect to this application in the extension."}
+                      {transferState.state === "PENDING_SIGNER" &&
+                        "Approve the purchase transaction within the Metamask extension"}
+                      {transferState.state === "PENDING_CONFIRMAION" &&
                         "Transaction has been sent to the blockchain. Please wait while the transaction is being confirmed."}
                     </p>
                   </div>
