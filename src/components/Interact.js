@@ -1,9 +1,5 @@
-import Web3 from "web3";
-import { Contract, getDefaultProvider, providers, utils, ethers } from "ethers";
-import { config } from "../config";
+import { ethers } from "ethers";
 
-
-const provider = getDefaultProvider("rinkeby", { alchemy: config.alchemyKey });
 const mprovider = new ethers.providers.Web3Provider(window.ethereum);
 
 
@@ -49,19 +45,7 @@ export const connectWallet = async () => {
     }
   } else {
     return {
-      address: "",
-      status: (
-        <span>
-          <p>
-            {" "}
-            🦊{" "}
-            <a target="_blank" href={`https://metamask.io/download.html`}>
-              You must install Metamask, a virtual Ethereum wallet, in your
-              browser.
-            </a>
-          </p>
-        </span>
-      ),
+      address: "",      
     };
   }
 };
@@ -112,19 +96,7 @@ export const getCurrentWalletConnected = async () => {
     }
   } else {
     return {
-      address: "",
-      status: (
-        <span>
-          <p>
-            {" "}
-            🦊{" "}
-            <a target="_blank" href={`https://metamask.io/download.html`}>
-              You must install Metamask, a virtual Ethereum wallet, in your
-              browser.
-            </a>
-          </p>
-        </span>
-      ),
+      address: ""      
     };
   }
 };

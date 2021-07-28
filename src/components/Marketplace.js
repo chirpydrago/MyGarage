@@ -3,17 +3,11 @@ import { Contract, getDefaultProvider, providers, utils , ethers} from "ethers";
 import { config } from "../config";
 import abi from "../fixtures/abi.json";
 import axios from "axios";
-import { Typography, AppBar, Card, CardActions, CardContent, CardMedia, CssBaseline, Grid, Toolbar, Container, Paper, CardHeader, Button, CardActionArea } from '@material-ui/core';
-import { AddShoppingCartSharp } from '@material-ui/icons'
+import { Typography, Card, CardActions, CardContent, CardMedia, Grid, Container, CardHeader, Button, CardActionArea } from '@material-ui/core';
 import nft from "./Contracts";
-import NftCard from "./NftCard";
-import { DeleteOutlined } from "@material-ui/icons";
-import { IconButton } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
 import { Divider } from "@material-ui/core";
-import { height } from "@material-ui/system";
 import { connectWallet, getCurrentWalletConnected } from './Interact';
-import { id } from "ethers/lib/utils";
 
 const useStyles = makeStyles(theme => ({
 
@@ -84,24 +78,11 @@ const Marketplace = () => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", (accounts) => {
         if (accounts.length > 0) {
-          setWallet(accounts[0]);
-          // setStatus("👆🏽 Write a message in the text-field above.");
+          setWallet(accounts[0]);          
         } else {
-          setWallet("");
-          // setStatus("🦊 Connect to Metamask using the top right button.");
+          setWallet("");          
         }
       });
-    } else {
-      // setStatus(
-      //   <p>
-      //     {" "}
-      //     🦊{" "}
-      //     <a target="_blank" href={`https://metamask.io/download.html`}>
-      //       You must install Metamask, a virtual Ethereum wallet, in your
-      //       browser.
-      //     </a>
-      //   </p>
-      // );
     }
   }
 
@@ -232,7 +213,7 @@ const Marketplace = () => {
     const destAddr = prompt('Please enter destination address correctly:');
     console.log(walletAddress.toString ,destAddr, addr , id);
     setTransferState({ state: "PENDING_SIGNER" });    
-    const receipt = await contract.transferFrom({ from: walletAddress , to: destAddr , tokenId: id });
+    const receipt = await contract.transferFrom({ from: ethers.utils.hexZeroPad(walletAddress) , to: ethers.utils.hexZeroPad(destAddr) , tokenId: id });
     setTransferState({ state: "PENDING_CONFIRMAION" });
     const transaction = await receipt.wait();
     setTransferState({ state: "SUCCESS", transaction });
@@ -285,7 +266,7 @@ const Marketplace = () => {
                                 Owned By:
                               </div>
                               <div className={styles.wallet}>{owner.substring(0, 7) + '...' + owner.substring(owner.length - 5)} </div>
-                              <div className="text-left text-xs">Price : {price} ETH</div>
+                              <div className={styles.wallet}>Price : {price} ETH</div>
                             </CardContent>
                           </CardActionArea>
                           <CardActions>
